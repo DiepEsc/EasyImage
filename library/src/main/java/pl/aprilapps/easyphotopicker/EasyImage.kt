@@ -1,6 +1,7 @@
 package pl.aprilapps.easyphotopicker
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -105,12 +106,9 @@ class EasyImage private constructor(
             lastCameraFile = Files.createCameraPictureFile(context)
             save()
             val takePictureIntent = Intents.createCameraForImageIntent(activityCaller.context, lastCameraFile!!.uri)
-            val capableComponent = takePictureIntent.resolveActivity(context.packageManager)
-                    ?.also {
-                        activityCaller.startActivityForResult(takePictureIntent, RequestCodes.TAKE_PICTURE)
-                    }
-
-            if (capableComponent == null) {
+            try {
+                activityCaller.startActivityForResult(takePictureIntent, RequestCodes.TAKE_PICTURE)
+            } catch (exception: ActivityNotFoundException) {
                 Log.e(EASYIMAGE_LOG_TAG, "No app capable of handling camera intent")
                 cleanup()
             }
@@ -123,11 +121,9 @@ class EasyImage private constructor(
             lastCameraFile = Files.createCameraVideoFile(context)
             save()
             val recordVideoIntent = Intents.createCameraForVideoIntent(activityCaller.context, lastCameraFile!!.uri)
-            val capableComponent = recordVideoIntent.resolveActivity(context.packageManager)
-                    ?.also {
-                        activityCaller.startActivityForResult(recordVideoIntent, RequestCodes.CAPTURE_VIDEO)
-                    }
-            if (capableComponent == null) {
+            try {
+                activityCaller.startActivityForResult(recordVideoIntent, RequestCodes.CAPTURE_VIDEO)
+            } catch (exception: ActivityNotFoundException) {
                 Log.e(EASYIMAGE_LOG_TAG, "No app capable of handling camera intent")
                 cleanup()
             }
@@ -272,6 +268,7 @@ class EasyImage private constructor(
         }
     }
 
+    @Deprecated("resolveActivity need query permission")
     fun canDeviceHandleGallery(): Boolean {
         return Intents.plainGalleryPickerIntent().resolveActivity(context.packageManager) != null
     }
