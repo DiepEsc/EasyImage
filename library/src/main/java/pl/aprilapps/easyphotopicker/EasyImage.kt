@@ -101,32 +101,42 @@ class EasyImage private constructor(
     }
 
     private fun startCameraForImage(caller: Any) {
+        try {
+            LineageosAperturePatcher.startCamera(caller, this::startCameraForImageCustom)
+        } catch (exception: ActivityNotFoundException) {
+            Log.e(EASYIMAGE_LOG_TAG, "No app capable of handling camera intent")
+            cleanup()
+        }
+    }
+
+    private fun startCameraForImageCustom(caller: Any, customize: ((Intent) -> Unit)) {
         cleanup()
         getCallerActivity(caller)?.let { activityCaller ->
             lastCameraFile = Files.createCameraPictureFile(context)
             save()
             val takePictureIntent = Intents.createCameraForImageIntent(activityCaller.context, lastCameraFile!!.uri)
-            try {
-                activityCaller.startActivityForResult(takePictureIntent, RequestCodes.TAKE_PICTURE)
-            } catch (exception: ActivityNotFoundException) {
-                Log.e(EASYIMAGE_LOG_TAG, "No app capable of handling camera intent")
-                cleanup()
-            }
+            customize(takePictureIntent)
+            activityCaller.startActivityForResult(takePictureIntent, RequestCodes.TAKE_PICTURE)
         }
     }
 
     private fun startCameraForVideo(caller: Any) {
+        try {
+            LineageosAperturePatcher.startCamera(caller, this::startCameraForVideoCustom)
+        } catch (exception: ActivityNotFoundException) {
+            Log.e(EASYIMAGE_LOG_TAG, "No app capable of handling camera intent")
+            cleanup()
+        }
+    }
+
+    private fun startCameraForVideoCustom(caller: Any, customize: ((Intent) -> Unit)) {
         cleanup()
         getCallerActivity(caller)?.let { activityCaller ->
             lastCameraFile = Files.createCameraVideoFile(context)
             save()
             val recordVideoIntent = Intents.createCameraForVideoIntent(activityCaller.context, lastCameraFile!!.uri)
-            try {
-                activityCaller.startActivityForResult(recordVideoIntent, RequestCodes.CAPTURE_VIDEO)
-            } catch (exception: ActivityNotFoundException) {
-                Log.e(EASYIMAGE_LOG_TAG, "No app capable of handling camera intent")
-                cleanup()
-            }
+            customize(recordVideoIntent)
+            activityCaller.startActivityForResult(recordVideoIntent, RequestCodes.CAPTURE_VIDEO)
         }
     }
 
